@@ -18,9 +18,12 @@ spec:
           containers:
             - name: package-runtime
               resources:
-                requests:         # required by Kyverno policy require-requests
-                  cpu: 100m
-                  memory: 256Mi
+                # Required by Kyverno policy require-requests. Sized to what an AWS
+                # provider really uses, so the scheduler does not pack them all onto
+                # one small node (with 256Mi they starved and never finished starting).
+                requests:
+                  cpu: 250m
+                  memory: 1Gi
 ---
 # The "family" provider: the shared part of all AWS providers.
 # Declared explicitly so it gets the runtime config above; as an automatic
