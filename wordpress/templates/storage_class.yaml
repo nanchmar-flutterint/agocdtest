@@ -1,0 +1,12 @@
+# platform/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: auto-ebs-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"   # PVCs without a class use this one
+provisioner: ebs.csi.eks.amazonaws.com                    # the Auto Mode EBS driver
+volumeBindingMode: WaitForFirstConsumer                   # create the disk in the Pod's AZ
+parameters:
+  type: gp3
+  encrypted: "true"
