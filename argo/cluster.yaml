@@ -1,0 +1,15 @@
+# Registers the wp-lab cluster as a deployment target for the EKS-managed Argo CD.
+# Contains no credentials: the capability authenticates with its IAM role
+# (AmazonEKSCapabilityArgoCDRole) through EKS access entries.
+# Apply this before any Application: kubectl apply -f argo/cluster.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: local-cluster
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+stringData:
+  name: in-cluster
+  server: arn:aws:eks:eu-central-1:120747724657:cluster/wp-lab
+  project: default

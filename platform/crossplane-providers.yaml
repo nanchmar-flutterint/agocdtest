@@ -1,0 +1,44 @@
+# How the Pod of every AWS provider should look
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: provider-aws
+spec:
+  serviceAccountTemplate:
+    metadata:
+      name: provider-aws          # must match the Pod Identity association
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        metadata:
+          labels:
+            team: platform        # required by Kyverno policy require-team-label
+        spec:
+          containers:
+            - name: package-runtime
+              resources:
+                requests:         # required by Kyverno policy require-requests
+                  cpu: 100m
+                  memory: 256Mi
+---
+# The "family" provider: the shared part of all AWS providers.
+# Declared explicitly so it gets the runtime config above; as an automatic
+# dependency it would use the default config and Kyverno would block its Pod.
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: upbound-provider-family-aws
+spec:
+  package: xpkg.upbound.io/upbound/provider-family-aws:v2.9.4
+  runtimeConfigRef:
+    name: provider-aws
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-s3
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-s3:v2.9.4
+  runtimeConfigRef:
+    name: provider-aws
