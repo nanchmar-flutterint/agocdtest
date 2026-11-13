@@ -5,6 +5,7 @@ metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
+    team: wordpress
 spec:
   ports:
     - port: 3306
@@ -32,6 +33,7 @@ metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
+    team: wordpress
 spec:
   selector:
     matchLabels:
@@ -44,10 +46,18 @@ spec:
       labels:
         app: wordpress
         tier: mysql
+        team: wordpress
     spec:
       containers:
+
       - image: mysql:8.0
         name: mysql
+        resources:
+          requests:
+            cpu: 100m         # 0.1 CPU core
+            memory: 256Mi
+          limits:
+            memory: 512Mi     # optional, but a good idea
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:

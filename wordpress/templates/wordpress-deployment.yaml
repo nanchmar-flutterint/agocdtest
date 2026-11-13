@@ -31,6 +31,7 @@ metadata:
   name: wordpress
   labels:
     app: wordpress
+    team: wordpress
 spec:
   replicas: 1
   selector:
@@ -44,10 +45,17 @@ spec:
       labels:
         app: wordpress
         tier: frontend
+        team: wordpress
     spec:
       containers:
       - image: "wordpress:{{ .Values.image.tag }}"
         name: wordpress
+        resources:
+          requests:
+            cpu: 100m         # 0.1 CPU core
+            memory: 256Mi
+          limits:
+            memory: 512Mi     # optional, but a good idea
         env:
         - name: WORDPRESS_DB_HOST
           value: wordpress-mysql
