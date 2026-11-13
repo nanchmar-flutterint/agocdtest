@@ -62,7 +62,7 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-pass
+              name: wordpress-db
               key: password
         - name: MYSQL_DATABASE
           value: {{ .Values.database.name }}
@@ -71,7 +71,7 @@ spec:
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-pass
+              name: wordpress-db
               key: password
         ports:
         - containerPort: 3306
