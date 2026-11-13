@@ -1,0 +1,13 @@
+{{- if .Values.database.size }}
+# The team's whole database request. The platform turns it into RDS, a security
+# group, a rule and a subnet group (platform/wordpressdatabase-composition.yaml).
+apiVersion: platform.example.org/v1alpha1
+kind: WordPressDatabase
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    # On a fresh cluster this kind may not exist yet; let Argo CD retry.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  size: {{ .Values.database.size }}
+{{- end }}

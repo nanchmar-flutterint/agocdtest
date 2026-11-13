@@ -2,6 +2,7 @@ image:
   tag: 6.2.2-apache
 database:
   name: wordpress
+  size: small      # small or medium; creates a WordPressDatabase (RDS). Empty = none
   storage:
     size: 2Gi
   existingSecret: wordpress-rds-password   # created by Crossplane (infra/team-blog/database.yaml)

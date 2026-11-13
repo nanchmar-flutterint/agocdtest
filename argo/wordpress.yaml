@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wordpress
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nanchmar-flutterint/agocdtest
+    targetRevision: HEAD
+    path: charts/wordpress
+  destination:
+    server: arn:aws:eks:eu-central-1:120747724657:cluster/wp-lab
+    namespace: team-blog
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

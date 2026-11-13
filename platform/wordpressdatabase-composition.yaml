@@ -1,0 +1,173 @@
+# Lab Part 8: what the platform builds for one WordPressDatabase.
+# The four resources from Part 7, now as a template.
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: wordpressdatabase-aws
+spec:
+  compositeTypeRef:
+    apiVersion: platform.example.org/v1alpha1
+    kind: WordPressDatabase
+  mode: Pipeline
+  pipeline:
+    # Step 1: load the network IDs from platform/network-environment.yaml
+    - step: load-network
+      functionRef:
+        name: function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            - type: Reference
+              ref:
+                name: wp-lab-network
+
+    # Step 2: create the four AWS resources
+    - step: create-resources
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          # (a) security group for the database
+          - name: security-group
+            base:
+              apiVersion: ec2.aws.m.upbound.io/v1beta1
+              kind: SecurityGroup
+              spec:
+                forProvider:
+                  region: eu-central-1
+                  description: MySQL access to a WordPress database
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: vpcId
+                toFieldPath: spec.forProvider.vpcId
+              - type: CombineFromComposite      # name in AWS: <namespace>-<name>
+                combine:
+                  variables:
+                    - fromFieldPath: metadata.namespace
+                    - fromFieldPath: metadata.name
+                  strategy: string
+                  string:
+                    fmt: "%s-%s"
+                toFieldPath: spec.forProvider.name
+
+          # (b) allow MySQL only from the cluster
+          - name: security-group-rule
+            base:
+              apiVersion: ec2.aws.m.upbound.io/v1beta1
+              kind: SecurityGroupRule
+              spec:
+                forProvider:
+                  region: eu-central-1
+                  type: ingress
+                  protocol: tcp
+                  fromPort: 3306
+                  toPort: 3306
+                  description: MySQL from the cluster
+                  securityGroupIdSelector:
+                    matchControllerRef: true    # the group made for this same database
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: clusterSecurityGroupId
+                toFieldPath: spec.forProvider.sourceSecurityGroupId
+
+          # (c) the private subnets
+          - name: subnet-group
+            base:
+              apiVersion: rds.aws.m.upbound.io/v1beta1
+              kind: SubnetGroup
+              spec:
+                forProvider:
+                  region: eu-central-1
+                  description: Private subnets for a WordPress database
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: privateSubnetIds
+                toFieldPath: spec.forProvider.subnetIds
+
+          # (d) the database. The platform decides everything except the size.
+          - name: instance
+            base:
+              apiVersion: rds.aws.m.upbound.io/v1beta1
+              kind: Instance
+              spec:
+                forProvider:
+                  region: eu-central-1
+                  engine: mysql
+                  engineVersion: "8.4"
+                  allocatedStorage: 20
+                  storageType: gp3
+                  storageEncrypted: true
+                  publiclyAccessible: false
+                  dbName: wordpress
+                  username: wordpress
+                  autoGeneratePassword: true
+                  passwordSecretRef:
+                    key: password
+                  dbSubnetGroupNameSelector:
+                    matchControllerRef: true
+                  vpcSecurityGroupIdSelector:
+                    matchControllerRef: true
+                  # Lab settings: cheap and easy to delete. Not for production.
+                  backupRetentionPeriod: 0
+                  skipFinalSnapshot: true
+                  deletionProtection: false
+                  applyImmediately: true
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              # input: size -> instance class
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.size
+                toFieldPath: spec.forProvider.instanceClass
+                transforms:
+                  - type: map
+                    map:
+                      small: db.t4g.micro
+                      medium: db.t4g.medium
+              # DB name in AWS: <namespace>-<name>. A fixed name also means a
+              # provider restart can never create a second database.
+              - type: CombineFromComposite
+                combine:
+                  variables:
+                    - fromFieldPath: metadata.namespace
+                    - fromFieldPath: metadata.name
+                  strategy: string
+                  string:
+                    fmt: "%s-%s"
+                toFieldPath: spec.forProvider.identifier
+              # Secret with the generated password: <name>-db-password
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.passwordSecretRef.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s-db-password"
+              # Secret with endpoint, port, user: <name>-db-connection
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.name
+                toFieldPath: spec.writeConnectionSecretToRef.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s-db-connection"
+              # output: endpoint -> status of the WordPressDatabase
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.address
+                toFieldPath: status.endpoint

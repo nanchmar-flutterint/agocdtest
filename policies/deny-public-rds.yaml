@@ -1,0 +1,22 @@
+# Lab Part 7 bonus: Kyverno also guards AWS resources that Crossplane creates.
+# Like an SCP that denies public databases.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: deny-public-rds
+spec:
+  validationActions: [Deny]
+  evaluation:
+    background:
+      enabled: false        # only check requests; no background scans of RDS objects
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["rds.aws.m.upbound.io", "rds.aws.upbound.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["instances"]
+  validations:
+    - expression: >-
+        !has(object.spec.forProvider.publiclyAccessible) ||
+        object.spec.forProvider.publiclyAccessible == false
+      message: "RDS instances must not be publicly accessible."

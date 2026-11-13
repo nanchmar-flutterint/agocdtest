@@ -1,0 +1,13 @@
+# Lab Part 8: the network facts of this cluster, kept in one place.
+# The Composition reads them, so teams never have to know a VPC or subnet ID.
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: wp-lab-network
+data:
+  vpcId: vpc-087543061d9e93f04
+  clusterSecurityGroupId: sg-0d826c98a0dbe5618
+  privateSubnetIds:
+    - subnet-083818f825da27a32   # eu-central-1a
+    - subnet-0a708503764bd93b8   # eu-central-1b
+    - subnet-0e87dcca44537c82a   # eu-central-1c

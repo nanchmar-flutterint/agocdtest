@@ -1,0 +1,34 @@
+# Lab Part 8: the API a team sees. Like a Service Catalog product definition.
+# It creates a new Kubernetes kind: WordPressDatabase.
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: wordpressdatabases.platform.example.org
+spec:
+  scope: Namespaced               # a team creates it in its own namespace
+  group: platform.example.org
+  names:
+    kind: WordPressDatabase
+    plural: wordpressdatabases
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [size]
+              properties:
+                size:              # the only input
+                  type: string
+                  enum: [small, medium]
+                  description: "small = db.t4g.micro, medium = db.t4g.medium"
+            status:
+              type: object
+              properties:
+                endpoint:          # the only output
+                  type: string
+                  description: Host name of the database
