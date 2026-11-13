@@ -1,0 +1,13 @@
+image:
+  tag: 6.2.2-apache
+database:
+  name: wordpress
+  storage:
+    size: 2Gi
+
+mysql:
+  enabled: true
+
+externalDatabase:
+  host: ""        # e.g. mydb.abcdefg.eu-west-1.rds.amazonaws.com
+
