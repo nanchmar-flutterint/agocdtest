@@ -11,3 +11,6 @@ mysql:
 
 externalDatabase:
   host: ""        # e.g. mydb.abcdefg.eu-west-1.rds.amazonaws.com
+
+gateway:
+  enabled: true
