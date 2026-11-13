@@ -4,7 +4,7 @@ metadata:
   name: wordpress
   namespace: argocd
 spec:
-  project: default
+  project: team-blog        # limits: see argo/project-team-blog.yaml
   source:
     repoURL: https://github.com/nanchmar-flutterint/agocdtest
     targetRevision: HEAD
