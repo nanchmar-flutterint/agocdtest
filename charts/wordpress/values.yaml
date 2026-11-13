@@ -5,13 +5,13 @@ database:
   size: small      # small or medium; creates a WordPressDatabase (RDS). Empty = none
   storage:
     size: 2Gi
-  existingSecret: wordpress-rds-password   # created by Crossplane (infra/team-blog/database.yaml)
+  existingSecret: wordpress-db-password   # created by Crossplane for the WordPressDatabase
 
 mysql:
   enabled: false   # the database is RDS now, see externalDatabase
 
 externalDatabase:
-  host: wordpress-db.cvykyvaeq4mn.eu-central-1.rds.amazonaws.com
+  host: team-blog-wordpress.cvykyvaeq4mn.eu-central-1.rds.amazonaws.com   # <namespace>-<release>
 
 gateway:
   enabled: true

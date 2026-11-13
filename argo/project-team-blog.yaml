@@ -1,0 +1,28 @@
+# Lab Part 8, step 7: what the blog team is allowed to deploy, and where.
+# Like an IAM permission boundary for an Argo CD Application.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-blog
+  namespace: argocd
+spec:
+  description: Blog team - WordPress and its database request
+  sourceRepos:
+    - https://github.com/nanchmar-flutterint/agocdtest
+  destinations:                       # only the team's own namespace
+    - server: arn:aws:eks:eu-central-1:120747724657:cluster/wp-lab
+      namespace: team-blog
+  clusterResourceWhitelist: []        # nothing cluster-wide
+  namespaceResourceWhitelist:         # only these kinds
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: platform.example.org
+      kind: WordPressDatabase         # the only way to get a database
