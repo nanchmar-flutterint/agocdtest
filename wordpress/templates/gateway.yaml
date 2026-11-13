@@ -19,7 +19,9 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   parentRefs:
-    - name: {{ .Release.Name }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Release.Name }}
       sectionName: http
   rules:
     - matches:
@@ -27,6 +29,9 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: wordpress   # <-- must equal your Service's name
+        - group: ""
+          kind: Service
+          name: wordpress   # <-- must equal your Service's name
           port: 80                                     # <-- must equal your Service's port
+          weight: 1
 {{- end }}
