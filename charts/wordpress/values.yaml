@@ -4,13 +4,13 @@ database:
   name: wordpress
   storage:
     size: 2Gi
-  existingSecret: wordpress-db
+  existingSecret: wordpress-rds-password   # created by Crossplane (infra/team-blog/database.yaml)
 
 mysql:
-  enabled: true
+  enabled: false   # the database is RDS now, see externalDatabase
 
 externalDatabase:
-  host: ""        # e.g. mydb.abcdefg.eu-west-1.rds.amazonaws.com
+  host: wordpress-db.cvykyvaeq4mn.eu-central-1.rds.amazonaws.com
 
 gateway:
   enabled: true

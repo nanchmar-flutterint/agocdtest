@@ -64,11 +64,12 @@ spec:
 apiVersion: rds.aws.m.upbound.io/v1beta1
 kind: Instance
 metadata:
-  name: wordpress-db               # also the DB identifier in AWS
+  name: wordpress-db
   namespace: team-blog
 spec:
   forProvider:
     region: eu-central-1
+    identifier: wordpress-db       # the DB name in AWS; without it AWS invents terraform-...
     engine: mysql
     engineVersion: "8.4"           # 8.0 is past standard support on RDS (extra cost)
     instanceClass: db.t4g.micro

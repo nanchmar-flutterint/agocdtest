@@ -58,7 +58,10 @@ spec:
             memory: 512Mi     # optional, but a good idea
         env:
         - name: WORDPRESS_DB_HOST
-          value: wordpress-mysql
+          # RDS endpoint if set, otherwise the MySQL Service inside the cluster
+          value: {{ .Values.externalDatabase.host | default "wordpress-mysql" | quote }}
+        - name: WORDPRESS_DB_NAME
+          value: {{ .Values.database.name | quote }}
         - name: WORDPRESS_DB_PASSWORD
           valueFrom:
             secretKeyRef:
