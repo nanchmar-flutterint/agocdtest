@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nanchmar-flutterint/agocdtest
+    targetRevision: HEAD
+    path: infra
+    directory:
+      recurse: true          # also read sub-folders such as infra/crossplane/
+  destination:
+    server: arn:aws:eks:eu-central-1:120747724657:cluster/wp-lab
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

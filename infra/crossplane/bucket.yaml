@@ -1,0 +1,15 @@
+# One S3 bucket, created and kept in place by Crossplane (lab Part 6).
+apiVersion: s3.aws.m.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: wp-lab-crossplane-120747724657   # also the bucket name in AWS; must be globally unique
+  namespace: crossplane-system
+spec:
+  forProvider:
+    region: eu-central-1
+    forceDestroy: true                   # lab only: lets Crossplane delete a non-empty bucket
+    tags:
+      team: platform
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: default
