@@ -1,0 +1,11 @@
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: default
+  annotations:
+    # On a fresh cluster this kind does not exist until the provider is installed.
+    # This lets Argo CD retry instead of failing the sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  credentials:
+    source: PodIdentity
