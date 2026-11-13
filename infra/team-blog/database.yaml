@@ -1,0 +1,100 @@
+# Lab Part 7: the RDS data tier for team-blog, as four AWS resources.
+# Same pieces as a CloudFormation RDS stack.
+
+# (a) An empty security group for the database, in the cluster VPC
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: wordpress-db
+  namespace: team-blog
+spec:
+  forProvider:
+    region: eu-central-1
+    vpcId: vpc-087543061d9e93f04
+    name: team-blog-wordpress-db
+    description: MySQL access to the team-blog WordPress database
+    tags:
+      team: blog
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: default
+---
+# (b) Allow MySQL (3306) only from the cluster's nodes and pods
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: SecurityGroupRule
+metadata:
+  name: wordpress-db-from-cluster
+  namespace: team-blog
+spec:
+  forProvider:
+    region: eu-central-1
+    type: ingress
+    protocol: tcp
+    fromPort: 3306
+    toPort: 3306
+    securityGroupIdRef:
+      name: wordpress-db                           # the group from (a)
+    sourceSecurityGroupId: sg-0d826c98a0dbe5618    # EKS cluster security group
+    description: MySQL from the wp-lab cluster
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: default
+---
+# (c) Which subnets the database may live in: the three private ones
+apiVersion: rds.aws.m.upbound.io/v1beta1
+kind: SubnetGroup
+metadata:
+  name: wordpress-db
+  namespace: team-blog
+spec:
+  forProvider:
+    region: eu-central-1
+    description: Private subnets of the wp-lab cluster
+    subnetIds:
+      - subnet-083818f825da27a32   # eu-central-1a private
+      - subnet-0a708503764bd93b8   # eu-central-1b private
+      - subnet-0e87dcca44537c82a   # eu-central-1c private
+    tags:
+      team: blog
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: default
+---
+# (d) The database itself
+apiVersion: rds.aws.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  name: wordpress-db               # also the DB identifier in AWS
+  namespace: team-blog
+spec:
+  forProvider:
+    region: eu-central-1
+    engine: mysql
+    engineVersion: "8.4"           # 8.0 is past standard support on RDS (extra cost)
+    instanceClass: db.t4g.micro
+    allocatedStorage: 20
+    storageType: gp3
+    storageEncrypted: true
+    publiclyAccessible: false
+    dbName: wordpress
+    username: wordpress
+    autoGeneratePassword: true     # Crossplane invents the password...
+    passwordSecretRef:             # ...and stores it in this Secret
+      name: wordpress-rds-password
+      key: password
+    dbSubnetGroupNameRef:
+      name: wordpress-db           # the subnet group from (c)
+    vpcSecurityGroupIdRefs:
+      - name: wordpress-db         # the security group from (a)
+    # Lab settings: cheap and easy to delete. Not for production.
+    backupRetentionPeriod: 0
+    skipFinalSnapshot: true
+    deletionProtection: false
+    applyImmediately: true
+    tags:
+      team: blog
+  writeConnectionSecretToRef:      # endpoint, port, username, password
+    name: wordpress-rds-connection
+  providerConfigRef:
+    kind: ClusterProviderConfig
+    name: default
