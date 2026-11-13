@@ -4,10 +4,10 @@ database:
   name: wordpress
   storage:
     size: 2Gi
+  existingSecret: wordpress-db
 
 mysql:
   enabled: true
 
 externalDatabase:
   host: ""        # e.g. mydb.abcdefg.eu-west-1.rds.amazonaws.com
-
