@@ -42,3 +42,23 @@ spec:
   package: xpkg.upbound.io/upbound/provider-aws-s3:v2.9.4
   runtimeConfigRef:
     name: provider-aws
+---
+# Part 7: RDS (database, subnet group)
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-rds
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rds:v2.9.4
+  runtimeConfigRef:
+    name: provider-aws
+---
+# Part 7: EC2 (security group and its rules)
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-ec2
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.9.4
+  runtimeConfigRef:
+    name: provider-aws
